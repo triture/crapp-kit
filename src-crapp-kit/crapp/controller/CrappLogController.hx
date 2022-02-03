@@ -126,15 +126,15 @@ class CrappLogController {
 
         var data:Dynamic = {
             situation : log.situation,
-            host : log.host,
+            host : log.host == null ? 'NO' : log.host.substr(0, 1024),
             verb : log.verb,
             route : log.route,
             status : log.status,
             run_time : log.run_time,
-            etag : log.etag,
-            ip : log.ip,
-            user_agent : log.user_agent,
-            message : log.message,
+            etag : log.etag == null ? null : log.etag.substr(0, 256),
+            ip : log.ip == null ? null : log.ip.substr(0, 256),
+            user_agent : log.user_agent == null ? null : log.user_agent.substr(0, 2048),
+            message : log.message == null ? null : log.message.substr(0, 2048),
             created_at : log.created_at
         };
 

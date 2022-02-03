@@ -20,6 +20,7 @@ class CrappServiceBase extends CrappErrorHandler {
 
     private var userAgent(get, null):String;
     private var userIp(get, null):String;
+    private var hostname(get, null):String;
 
     private var req:Request;
     private var res:Response;
@@ -41,6 +42,12 @@ class CrappServiceBase extends CrappErrorHandler {
     private function attachReqRes(req:Request, res:Response):Void {
         this.req = req;
         this.res = res;
+    }
+
+    private function get_hostname():String {
+        if (this.req == null) return 'NO_REQUESTER';
+        else if (this.req.hostname == null) return 'NO_HOSTNAME';
+        else return this.req.hostname;
     }
 
     private function get_userAgent():String {
@@ -92,9 +99,9 @@ class CrappServiceBase extends CrappErrorHandler {
         var code:String = StringTools.lpad(Std.string(statusCode), '0', 3);
 
         if (data.error) {
-            Crapp.S.controller.print(1, 'CRAPP [ERR] ${code} ${time} ${verb} ${this.req.hostname} ${this.originalRoute} ' + etag);
+            Crapp.S.controller.print(1, 'CRAPP [ERR] ${code} ${time} ${verb} ${this.hostname} ${this.originalRoute} ' + etag);
         } else {
-            Crapp.S.controller.print(1, 'CRAPP [SUC] ${code} ${time} ${verb} ${this.req.hostname} ${this.originalRoute} ' + etag);
+            Crapp.S.controller.print(1, 'CRAPP [SUC] ${code} ${time} ${verb} ${this.hostname} ${this.originalRoute} ' + etag);
         }
 
         var data:CrappLogData = {
@@ -102,7 +109,7 @@ class CrappServiceBase extends CrappErrorHandler {
                 ? CrappLogSituation.ERROR
                 : CrappLogSituation.SUCCESS,
 
-            host : this.req.hostname,
+            host : this.hostname,
             verb : this.originalVerb,
             route : this.originalRoute,
             status : statusCode,

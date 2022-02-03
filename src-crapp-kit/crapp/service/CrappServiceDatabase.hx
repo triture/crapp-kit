@@ -33,7 +33,7 @@ class CrappServiceDatabase<T> extends CrappService<T> {
         else {
             Timer.delay(
                 function():Void {
-                    if (this.database.isActive) Crapp.S.controller.print(1, 'DATABASE IS ALIVE FOR TOO MUCH TIME - ${this.originalVerb} ${this.req.hostname} ${this.originalRoute}');
+                    if (this.database.isActive) Crapp.S.controller.print(1, 'DATABASE IS ALIVE FOR TOO MUCH TIME - ${this.originalVerb} ${this.hostname} ${this.originalRoute}');
                 },
                 5000
             );

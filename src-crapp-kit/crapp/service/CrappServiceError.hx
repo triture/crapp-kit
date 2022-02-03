@@ -50,6 +50,8 @@ class CrappServiceError extends Exception {
     // O servidor encontrou uma situação com a qual não sabe lidar.
     static public function SERVER_ERROR(techMessage:String):CrappServiceError return ERROR(500, "Server Error", techMessage);
 
+    static public function BAD_GATEWAY(techMessage:String):CrappServiceError return ERROR(502, "Bad Gateway", techMessage);
+
     static public function SERVER_UNAVAILABLE(techMessage:String):CrappServiceError return ERROR(503, "Service Unavailable", techMessage);
 
     public function getErrorModel():CrappServiceErrorData {

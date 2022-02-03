@@ -65,7 +65,7 @@ class CrappService<T> extends CrappServiceBase {
         );
     }
 
-    public function runServiceCallback(cb:Void->Void):Void this.runCallbackWithCatch(cb, this.resultError);
+    public function runServiceCallback(cb:Void->Void):Void this.runCallbackWithCatch(cb, this.resultError.bind(_, false));
 
     private function runBeforeExit():Void {}
     private function runBeforeSuccessExit():Void {}
@@ -76,9 +76,9 @@ class CrappService<T> extends CrappServiceBase {
         this.resultSuccess(data);
     }
 
-    private function resultSuccess(?data:T):Void {
+    private function resultSuccess(?data:T, ?renderPlainText:Bool = false):Void {
         var result:CrappServiceResultData = {
-            host : this.req.hostname,
+            host : this.hostname,
             endpoint : this.req.path,
             data : data,
             error : false
@@ -93,7 +93,9 @@ class CrappService<T> extends CrappServiceBase {
             this.runBeforeSuccessExit();
             this.runBeforeExit();
 
-            this.doFinalResponse(200, result);
+            if (renderPlainText) this.doFinalResponse(200, result.data, renderPlainText);
+            else this.doFinalResponse(200, result, renderPlainText);
+
             if (this.autoLog) this.registerLog(result, 200);
 
         } catch (e:Dynamic) {
@@ -102,11 +104,11 @@ class CrappService<T> extends CrappServiceBase {
         }
     }
 
-    private function resultError(error:CrappServiceErrorData):Void {
+    private function resultError(error:CrappServiceErrorData, ?renderPlainText:Bool = false):Void {
         var tech:String = error.tech;
 
         var data:CrappServiceResultData = {
-            host : this.req.hostname,
+            host : this.hostname,
             endpoint : this.req.path,
             data : null,
             error : true,
@@ -119,7 +121,8 @@ class CrappService<T> extends CrappServiceBase {
         #if production
         data.data_error.tech = null;
         #end
-        this.doFinalResponse(error.error_code == 0 ? 404 : error.error_code, data);
+        if (renderPlainText) this.doFinalResponse(error.error_code == 0 ? 404 : error.error_code, error.message, renderPlainText);
+        else this.doFinalResponse(error.error_code == 0 ? 404 : error.error_code, data, renderPlainText);
 
         if (this.autoLog) {
             data.data_error.tech = tech;
@@ -128,10 +131,13 @@ class CrappService<T> extends CrappServiceBase {
 
     }
 
-    private function doFinalResponse(statusCode:Int, data:Dynamic):Void {
+    private function doFinalResponse(statusCode:Int, data:Dynamic, ?renderPlainText:Bool = false):Void {
         if (!this.alreadyResponsed) {
             this.alreadyResponsed = true;
-            this.res.status(statusCode).json(data);
+
+            if (renderPlainText) this.res.status(statusCode).send(Std.string(data));
+            else this.res.status(statusCode).json(data);
+
         } else {
             trace('DOUBLE RESPONSE ERROR');
             // TODO: LOGAR ESSE TIPO DE ERRO EM ALGUM LUGAR SEGURO PARA ANALIAE FUTURA
