@@ -1,6 +1,6 @@
 package crapp.controller;
 
-import helper.kits.NumberKit;
+import crapp.model.CrappModel.CrappModelDatabase;
 import haxe.Timer;
 import haxe.crypto.Sha1;
 import helper.cache.InMemoryCache;
@@ -15,22 +15,18 @@ import node.mysql.Mysql;
 
 class DatabaseController {
 
-    static public var S:DatabaseController;
-    static public function create():Void if (S == null) new DatabaseController();
-
     private var isConnected:Bool;
     private var pool:MysqlConnectionPool;
     private var connectionInitializer:Array<String>;
 
-    public function new() {
-        if (S == null) S = this;
+    public function new(model:CrappModelDatabase) {
 
         var data:MysqlConnectionPoolOptions = {
             connectionLimit : 12,
-            host : Sys.getEnv("ENV_MYSQL_HOST"),
-            user : Sys.getEnv("ENV_MYSQL_USER"),
-            password : Sys.getEnv("ENV_MYSQL_PASSWORD"),
-            port : Std.parseInt(Sys.getEnv("ENV_MYSQL_PORT")),
+            host : model.host,
+            user : model.user,
+            password : model.password,
+            port : model.port,
             charset : 'utf8mb4'
         }
 

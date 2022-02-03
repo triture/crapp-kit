@@ -1,7 +1,6 @@
 package crapp.model.modules.logs;
 
 import abstracts.AbstractDateTimeFormat;
-import abstracts.AbstractDateFormat;
 import anonstruct.AnonStruct;
 
 typedef CrappLogData = {

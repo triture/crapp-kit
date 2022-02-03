@@ -1,5 +1,6 @@
 package crapp.controller;
 
+import crapp.model.CrappModel;
 import node.express.Application;
 
 class CrappController {
@@ -9,10 +10,10 @@ class CrappController {
     public var database:DatabaseController;
     public var log:CrappLogController;
 
-    public function new(express:Application) {
+    public function new(model:CrappModel, express:Application) {
         this.route = new RouteController(express);
         this.security = new SecurityController();
-        this.database = new DatabaseController();
+        this.database = new DatabaseController(model.database);
         this.log = new CrappLogController();
     }
 

@@ -23,7 +23,7 @@ class Crapp {
 
         this.model = model;
 
-        this.controller = new CrappController(this.express);
+        this.controller = new CrappController(model, this.express);
 
         this.startServer();
 

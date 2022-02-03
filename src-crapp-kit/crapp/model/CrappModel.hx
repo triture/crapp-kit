@@ -7,5 +7,12 @@ typedef CrappModel = {
     var rounds:Int;
     var server_port:Int;
 
-    var crapp_log_host:String;
+    var database:CrappModelDatabase;
+}
+
+typedef CrappModelDatabase = {
+    var host:String;
+    var user:String;
+    var password:String;
+    var port:Int;
 }
