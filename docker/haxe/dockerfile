@@ -1,0 +1,18 @@
+FROM haxe:4.2.1-buster
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends apt-utils \
+	&& yes | apt-get install unzip -y \
+	&& yes | apt-get install zip -y
+
+RUN yes | apt-get install -y gcc
+RUN yes | apt-get install -y g++
+
+# INSTALLING NODEJS
+RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g minify@7.0.2
+
+WORKDIR /crapp-kit
+
+CMD ["sh", "/docker-shared/alive.sh"]

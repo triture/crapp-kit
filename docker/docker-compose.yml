@@ -1,0 +1,17 @@
+version: '3'
+services:
+
+    haxe:
+        restart: always
+        build:
+            context: ./haxe/
+            dockerfile: dockerfile
+        environment: 
+            RUN_BASH_SCRIPT: "/haxe/start.sh"
+            KEEP_CONTAINER_ALIVE: "yes"
+        volumes:
+            - ./haxelib:/haxelib
+            - ../repo:/repo
+            - ./shared:/docker-shared
+            - ./haxe/scripts:/haxe
+            - ../:/crapp-kit

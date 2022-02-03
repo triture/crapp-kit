@@ -1,0 +1,17 @@
+{
+  "name": "crapp-kit",
+  "url": "",
+  "license": "MIT",
+  "classPath": "src-crapp-kit/",
+  "tags": [ "util"],
+  "description": "",
+  "version": "0.0.1",
+  "releasenote": "",
+  "contributors": [ "magmalab" ],
+  "dependencies": {
+    "anonstruct" : "",
+	  "util-kit" : "",
+    "hxnodejs" : "",
+    "datetime" : ""
+  }
+}
