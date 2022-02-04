@@ -5,6 +5,7 @@ import helper.kits.FileKit;
 import anonstruct.AnonStruct;
 
 typedef CrappMigrationData = {
+    var database:String;
     var migration:Array<String>;
 }
 
@@ -23,6 +24,10 @@ class CrappMigrationDataValidator extends AnonStruct {
                     throw 'Migration file ${value} not found.';
                 }
         });
+
+        this.propertyString('database')
+            .refuseNull()
+            .refuseEmpty();
 
         this.propertyArray('migration')
             .refuseNull()

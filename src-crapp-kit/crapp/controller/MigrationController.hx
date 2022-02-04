@@ -31,20 +31,18 @@ class MigrationController {
         Crapp.S.controller.print(0, 'Executing CRAPP Migration');
         Crapp.S.controller.print(1, 'Running Migration...');
 
-        this.loadMigration();
+        this.createDatabaseConnection(
+            this.runCrappInternalMigration.bind(
+                this.runApplicationMigration.bind(this.done)
+            )
+        );
 
-        if (this.migrationData == null) this.done();
-        else {
-
-            this.createDatabaseConnection(
-                this.runCrappInternalMigration.bind(this.done)
-            );
-
-        }
 
     }
 
     private function runCrappInternalMigration(onResolve:()->Void):Void {
+        this.print('Running crapp internal migrations...');
+
         var migrationPack:MigrationPackage = new MigrationPackage('crapp_log', this.connection);
 
         migrationPack.add('00001', "
@@ -70,8 +68,28 @@ class MigrationController {
             ENGINE=InnoDB
             ;
         ");
-        
+
         migrationPack.execute(onResolve, this.print);
+    }
+
+    private function runApplicationMigration(onResolve:()->Void):Void {
+        this.print('Running application migrations...');
+
+        if (!this.existMigrationData()) onResolve();
+        else {
+            if (this.isMigrationDataLoaded()) {
+                if (this.migrationData == null || this.migrationData.migration.length == 0) onResolve();
+                else {
+                    var migrationPack:MigrationPackage = new MigrationPackage(this.migrationData.database, this.connection);
+
+                    for (item in this.migrationData.migration) {
+                        migrationPack.add(item, File.getContent(FileKit.addPath(Crapp.S.model.migration_path, item)));
+                    }
+
+                    migrationPack.execute(onResolve, this.print);
+                }
+            }
+        }
     }
 
     private function createDatabaseConnection(onResolve:()->Void):Void {
@@ -107,29 +125,31 @@ class MigrationController {
         return true;
     }
 
-    private function loadMigration():Void {
-        if (this.existMigrationData()) {
+    private function isMigrationDataLoaded():Bool {
 
-            var path:String = this.getMigrationDriverPath();
-            var jsonString:String = File.getContent(path);
+        var path:String = this.getMigrationDriverPath();
+        var jsonString:String = File.getContent(path);
 
-            try {
-                this.print('Loading crapp-migration.json...');
+        try {
+            this.print('Loading crapp-migration.json...');
 
-                var jsonData:CrappMigrationData = haxe.Json.parse(jsonString);
-                var validator:CrappMigrationDataValidator = new CrappMigrationDataValidator(Crapp.S.model.migration_path);
+            var jsonData:CrappMigrationData = haxe.Json.parse(jsonString);
+            var validator:CrappMigrationDataValidator = new CrappMigrationDataValidator(Crapp.S.model.migration_path);
 
-                validator.validate(jsonData);
+            validator.validate(jsonData);
 
-                this.migrationData = jsonData;
+            this.migrationData = jsonData;
+            return true;
 
-            } catch (e:AnonStructError) {
-                this.print('Error: ' + e.errorMessage);
-            } catch (e:Dynamic) {
-                this.print('Error on loading Migration Data: ' + Std.string(e));
-            }
+        } catch (e:AnonStructError) {
+            this.print('Error: ' + e.property + ' - ' + e.errorMessage);
+
+        } catch (e:Dynamic) {
+            this.print('Error on loading Migration Data: ' + Std.string(e));
 
         }
+
+        return false;
     }
 
     private function getMigrationDriverPath():String {
