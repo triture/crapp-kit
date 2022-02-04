@@ -7,6 +7,8 @@ typedef CrappModel = {
     var rounds:Int;
     var server_port:Int;
 
+    var migration_path:String;
+
     var database:CrappModelDatabase;
 }
 

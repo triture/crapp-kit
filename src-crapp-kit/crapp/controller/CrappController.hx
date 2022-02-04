@@ -9,12 +9,14 @@ class CrappController {
     public var security:SecurityController;
     public var database:DatabaseController;
     public var log:CrappLogController;
+    public var migration:MigrationController;
 
     public function new(model:CrappModel, express:Application) {
         this.route = new RouteController(express);
         this.security = new SecurityController();
         this.database = new DatabaseController(model.database);
         this.log = new CrappLogController();
+        this.migration = new MigrationController();
     }
 
     public function print(pad:Int, message:Dynamic):Void {

@@ -24,9 +24,10 @@ class Crapp {
         this.model = model;
 
         this.controller = new CrappController(model, this.express);
+        this.controller.migration.run(this.startServer);
+    }
 
-        this.startServer();
-
+    public function registerServices():Void {
         Crapp.S.controller.route.registerService(CrappRouteVerb.POST, '/crapp/log/access/add', ServiceCrappLogAccessAdd);
         Crapp.S.controller.route.registerService(CrappRouteVerb.POST, '/crapp/log/access/clean', ServiceCrappLogAccessClean);
     }
@@ -41,10 +42,15 @@ class Crapp {
 
         this.express.options('*', cors());
 
+        Crapp.S.controller.print(0, 'CRAPP is starting Services');
+
         this.express.listen(
             this.model.server_port,
             function():Void {
-                Sys.println('App running in port ${this.model.server_port}');
+
+                Crapp.S.controller.print(1, 'Crapp running in port ${this.model.server_port}');
+                this.registerServices();
+                Crapp.S.controller.print(1, 'All Services up\n\n');
             }
         );
 

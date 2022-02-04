@@ -39,6 +39,10 @@ extern class MysqlConnection {
             }
         );
     }
+
+    public function beginTransaction(callback:(err:MysqlError)->Void):Void;
+    public function commit(callback:(err:MysqlError)->Void):Void;
+    public function rollback(callback:(err:MysqlError)->Void):Void;
 }
 
 extern class MysqlConnectionPool {
@@ -104,6 +108,8 @@ typedef MysqlConnectionOptions = {
     @:optional var port:Int;
     @:optional var database:String;
     @:optional var charset:String;
+    @:optional var multipleStatements:Bool;
+
 }
 
 
