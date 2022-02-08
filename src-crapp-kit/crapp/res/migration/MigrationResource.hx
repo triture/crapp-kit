@@ -31,6 +31,7 @@ class MigrationResource {
     private function createMigrationTables(onResult:()->Void, onError:(message:String)->Void):Void {
         var sqls:Array<String> = [];
 
+        sqls.push('SET CHARSET "utf8";',);
         sqls.push('START TRANSACTION;');
         sqls.push('CREATE DATABASE IF NOT EXISTS `${this.database}` /*!40100 DEFAULT CHARACTER SET utf8 */;');
         sqls.push('CREATE TABLE IF NOT EXISTS `${this.database}`.`crapp_migration` (`value` VARCHAR(1024) NOT NULL COLLATE \'utf8_general_ci\')
@@ -78,6 +79,7 @@ class MigrationResource {
 
     private function executeRunner(key:String, sql:String, onResolve:()->Void, onError:(message:String)->Void):Void {
         var sqls:Array<String> = [
+            'SET CHARSET "utf8";',
             'START TRANSACTION;',
             sql,
             'DELETE FROM `${this.database}`.`crapp_migration`;',
