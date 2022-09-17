@@ -59,9 +59,12 @@ class CrappServiceBase extends CrappErrorHandler {
 
     private function get_userIp():String {
         if (this.req == null) return '0.0.0.0';
-        return StringKit.isEmpty(this.req.get('x-forwarded-for'))
+        var result:String = StringKit.isEmpty(this.req.get('x-forwarded-for'))
             ? this.req.connection.remoteAddress
             : this.req.get('x-forwarded-for');
+
+        if (result == null) return '0.0.0.0';
+        else return result;
     }
 
     public function getHeaderValue(header:String):String return this.req.get(header);

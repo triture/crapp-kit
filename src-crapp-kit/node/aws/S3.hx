@@ -14,11 +14,31 @@ extern class S3 {
     public function listObjects(bucketParams:S3BucketParamsModel, callback:(err:Dynamic, data:Dynamic)->Void):Void;
     public function upload(uploadParams:S3UploadParamsModel, ?callback:(err:Dynamic, data:S3UploadCBDataModel)->Void):Dynamic;
     public function getObject(params:GetObjectParams, callback:(err:Dynamic, data:GetObjectResult)->Void):Void;
+    public function deleteObject(params:DeleteObjectParams, callback:(err:Dynamic, data:Dynamic)->Void):Void;
+    public function deleteObjects(params:DeleteObjectsParams, callback:(err:Dynamic, data:Dynamic)->Void):Void;
+}
+
+typedef ObjectParamKey = {
+    var Key:String;
 }
 
 typedef GetObjectParams = {
+    > ObjectParamKey,
     var Bucket:String;
-    var Key:String;
+}
+
+typedef DeleteObjectParams = {
+    > GetObjectParams,
+}
+
+typedef DeleteObjectsParams = {
+    var Bucket:String;
+    var Delete:DeleteStrutctureParam;
+}
+
+typedef DeleteStrutctureParam = {
+    var Objects:Array<ObjectParamKey>;
+    var Quiet:Bool;
 }
 
 typedef GetObjectResult = {

@@ -153,6 +153,7 @@ class MysqlResultSet<T> implements ResultSet {
     }
 
     public var insertId(get, null):Int;
+    public var insertIds(get, null):Array<Int>;
     public var affectedRows(get, null):Int;
     public var changedRows(get, null):Int;
 
@@ -160,6 +161,15 @@ class MysqlResultSet<T> implements ResultSet {
     public var nfields(get, null):Int;
 
     private function get_insertId():Int return this.__r.insertId;
+
+    private function get_insertIds():Array<Int> {
+        var id:Int = this.insertId;
+        var result:Array<Int> = [];
+
+        for (i in 0 ... (this.affectedRows - this.changedRows)) result.push(id + i);
+
+        return result;
+    }
     private function get_affectedRows():Int return this.__r.affectedRows;
     private function get_changedRows():Int return this.__r.changedRows;
 

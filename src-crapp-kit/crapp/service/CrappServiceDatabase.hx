@@ -41,6 +41,17 @@ class CrappServiceDatabase<T> extends CrappService<T> {
         }
     }
 
+    public function queryRun(query:CrappDatabaseRequestData, onComplete:()->Void):Void {
+        if (this.database == null) this.resultError(CrappServiceError.SERVER_ERROR('Database is not loaded').getErrorModel());
+        else this.database.makeQuery(
+            query,
+            function(result:CrappDatabaseResult<Dynamic>):Void {
+                if (result.hasError) this.resultError(CrappServiceError.SERVER_ERROR(result.errorMessage).getErrorModel());
+                else onComplete();
+            }
+        );
+    }
+
     public function querySelectOne<Q>(query:CrappDatabaseRequestData, onRead:(data:Q)->Void):Void this.querySelect(query, true, function(data:Array<Q>):Void onRead(data[0]));
 
     public function querySelect<Q>(query:CrappDatabaseRequestData, protectFrom404:Bool, onRead:(data:Array<Q>)->Void):Void {

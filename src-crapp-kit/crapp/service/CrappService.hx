@@ -30,7 +30,7 @@ class CrappService<T> extends CrappServiceBase {
         this.runServiceCallback(this.run);
     }
 
-    public function setServiceTimeout(timeout:Int = 20000):Void {
+    public function setServiceTimeout(timeout:Int = 50000):Void {
         if (this.timeoutTimer != null) {
             this.timeoutTimer.stop();
             this.timeoutTimer.run = null;
@@ -74,6 +74,34 @@ class CrappService<T> extends CrappServiceBase {
     private function resultSuccessPaginable(?data:T, ?page:CrappServiceResultPage):Void {
         this.pageSpecification = page;
         this.resultSuccess(data);
+    }
+
+    private function resultSucessBin(data:js.node.buffer.Buffer):Void {
+        var result:CrappServiceResultData = {
+            host : this.req.hostname,
+            endpoint : this.req.path,
+            data : '#bin-data#',
+            error : false
+        }
+
+        try {
+            this.runBeforeSuccessExit();
+            this.runBeforeExit();
+
+            if (!this.alreadyResponsed) {
+                this.alreadyResponsed = true;
+                this.res.status(200).send(data);
+            } else {
+                trace('DOUBLE RESPONSE ERROR');
+                // TODO: LOGAR ESSE TIPO DE ERRO EM ALGUM LUGAR SEGURO PARA ANALIAE FUTURA
+            }
+
+            if (this.autoLog) this.registerLog(result, 200);
+
+        } catch (e:Dynamic) {
+            var e:CrappServiceError = CrappServiceError.SERVER_ERROR(Std.string(e));
+            this.resultError(e.getErrorModel());
+        }
     }
 
     private function resultSuccess(?data:T, ?renderPlainText:Bool = false):Void {
