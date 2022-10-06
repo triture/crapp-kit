@@ -10,7 +10,6 @@ typedef CrappModel = {
     var migration_path:String;
 
     var database:CrappModelDatabase;
-    var crapp_log_host:String;
 }
 
 typedef CrappModelDatabase = {
