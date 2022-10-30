@@ -18,6 +18,7 @@ extern class MysqlConnection {
     public function connect(onError:MysqlError->Void):Void;
 
     // callback = error, results, fields
+    @:overload(function(sql:{sql:String, timeout:Int}, callback:MysqlError->Array<Dynamic>->Array<MysqlFieldPacket>->Void):MysqlQuery{})
     public function query(sql:String, callback:MysqlError->Array<Dynamic>->Array<MysqlFieldPacket>->Void):MysqlQuery;
 
     public function end():Void;
@@ -26,9 +27,14 @@ extern class MysqlConnection {
 
     public function release():Void;
 
-    inline public function queryResult<T>(sql:String, callback:MysqlError->MysqlResultSet<T>->Void):Void {
+    public function destroy():Void;
+
+    inline public function queryResult<T>(sql:String, callback:MysqlError->MysqlResultSet<T>->Void, ?timeout:Int):Void {
         this.query(
-            sql,
+            {
+                sql : sql,
+                timeout : timeout
+            },
             function(err:MysqlError, r:Dynamic, f:Array<MysqlFieldPacket>):Void {
                 if (err == null) {
 
@@ -54,6 +60,8 @@ extern class MysqlConnectionPool {
 
     // callback = error, MysqlConnection
     public function getConnection(callback:MysqlError->MysqlConnection->Void):Void;
+
+    public function end(?callback:(error:MysqlError)->Void):Void;
 
     inline public function queryResult<T>(sql:String, callback:MysqlError->MysqlResultSet<T>->Void):Void {
         this.query(
@@ -117,6 +125,7 @@ typedef MysqlConnectionPoolOptions = {
     > MysqlConnectionOptions,
 
     var connectionLimit:Int;
+    @:optional var acquireTimeout:Int;
 }
 
 extern class MysqlError {

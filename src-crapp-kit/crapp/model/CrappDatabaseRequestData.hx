@@ -4,12 +4,13 @@ import anonstruct.AnonStruct;
 
 typedef CrappDatabaseRequestData = {
     var query:String;
-    var data:Dynamic;
 
+    @:optional var data:Dynamic;
     @:optional var cache:Bool;
     @:optional var debug:Bool;
     @:optional var retry_on_deadlock:Int;
     @:optional var error:String;
+    @:optional var timeout:Int;
 }
 
 class CrappDatabaseRequestDataValidator extends AnonStruct {

@@ -1,2 +1,4 @@
 FROM --platform=linux/amd64 mysql:5.7.35
 
+RUN mkdir /test3
+COPY ./init.sql /docker-entrypoint-initdb.d/init.sql

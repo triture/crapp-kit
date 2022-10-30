@@ -15,18 +15,22 @@ import node.mysql.Mysql;
 
 class DatabaseController {
 
+    private var model:CrappModelDatabase;
     private var isConnected:Bool;
     private var pool:MysqlConnectionPool;
     private var connectionInitializer:Array<String>;
 
     public function new(model:CrappModelDatabase) {
+        this.model = model;
 
         var data:MysqlConnectionPoolOptions = {
-            connectionLimit : 12,
-            host : model.host,
-            user : model.user,
-            password : model.password,
-            port : model.port,
+            connectionLimit : this.model.max_connections == null
+                ? 12
+                : this.model.max_connections,
+            host : this.model.host,
+            user : this.model.user,
+            password : this.model.password,
+            port : this.model.port,
             charset : 'utf8mb4'
         }
 
@@ -36,6 +40,8 @@ class DatabaseController {
         this.pool = Mysql.createPool(data);
     }
 
+    public function close(callback:(err:MysqlError)->Void):Void this.pool.end(callback);
+
     public function getInstance(callback:(conn:CrappDatabase)->Void):Void {
         this.pool.getConnection(
             function(connError:MysqlError, conn:MysqlConnection):Void {
@@ -44,7 +50,7 @@ class DatabaseController {
                         conn,
                         this.connectionInitializer,
                         function():Void {
-                            callback(new CrappDatabase(conn));
+                            callback(new CrappDatabase(conn, this.model.connection_timeout));
                         }
                     );
                 }
@@ -169,7 +175,7 @@ class CrappDatabase {
     private var leakTimer:Timer;
 
     @:allow(crapp.controller.DatabaseController)
-    private function new(conn:MysqlConnection) {
+    private function new(conn:MysqlConnection, ?leakTimeout:Int) {
         this.conn = conn;
 
         this.leakTimer = Timer.delay(function():Void {
@@ -180,7 +186,7 @@ class CrappDatabase {
                 Sys.println(' !! ');
                 Sys.println('');
             }
-        }, 30000);
+        }, leakTimeout == null ? 30000 : leakTimeout);
     }
 
     private function get_hasError():Bool return (this.conn == null);

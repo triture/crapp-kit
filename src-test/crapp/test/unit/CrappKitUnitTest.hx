@@ -1,5 +1,6 @@
 package crapp.test.unit;
 
+import crapp.test.unit.doevent.DoEventDispatcherTest;
 import crapp.test.unit.token.TestTokenSignedPayload;
 import crapp.test.unit.token.TestTokenBearerLoader;
 
@@ -9,7 +10,9 @@ class CrappKitUnitTest {
 
         utest.UTest.run([
             new TestTokenBearerLoader(),
-            new TestTokenSignedPayload()
+            new TestTokenSignedPayload(),
+
+            new DoEventDispatcherTest()
         ]);
 
     }

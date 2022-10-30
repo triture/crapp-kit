@@ -17,4 +17,7 @@ typedef CrappModelDatabase = {
     var user:String;
     var password:String;
     var port:Int;
+
+    @:optional var max_connections:Int;
+    @:optional var acquire_timeout:Int;
 }

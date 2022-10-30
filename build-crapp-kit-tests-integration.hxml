@@ -1,0 +1,12 @@
+-cp src-crapp-kit
+-cp src-test
+
+-lib hxnodejs
+-lib utest
+-lib util-kit
+-lib datetime
+-lib anonstruct
+
+-main crapp.test.integration.CrappKitIntegrationTest
+
+-js ./build/crapp-integration-test.js

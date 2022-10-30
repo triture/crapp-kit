@@ -10,4 +10,10 @@ fi
 echo "BUILDING CRAPP KIT UNIT TEST"           && \
 haxe build-crapp-kit-tests-unit.hxml          && \
 sleep 1s                                      && \
-node ./build/crapp-unit-test.js
+node ./build/crapp-unit-test.js               && \
+
+
+echo "BUILDING CRAPP KIT INTEGRATION TEST"    && \
+haxe build-crapp-kit-tests-integration.hxml   && \
+sleep 1s                                      && \
+node ./build/crapp-integration-test.js
