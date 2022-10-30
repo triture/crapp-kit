@@ -1,4 +1,4 @@
-FROM haxe:4.2.1-buster
+FROM haxe:4.2.5-buster
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends apt-utils \
@@ -8,10 +8,39 @@ RUN apt-get update \
 RUN yes | apt-get install -y gcc
 RUN yes | apt-get install -y g++
 
+# SETUP HAXELIB
+
+RUN yes | haxelib install datetime
+RUN yes | haxelib install PBKDF2
+RUN yes | haxelib install haxe-crypto
+RUN yes | haxelib install utest
+RUN yes | haxelib git util-kit https://github.com/triture/util-kit.git
+RUN yes | haxelib git anonstruct https://github.com/triture/anonstruct.git
+RUN yes | haxelib git apirock https://github.com/triture/apirock.git
+RUN yes | haxelib git hxnodejs https://github.com/HaxeFoundation/hxnodejs.git
+
+
 # INSTALLING NODEJS
-RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
+
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
+
+ENV NODE_PATH=/usr/lib/node_modules
+ENV NODE_OPTIONS=--max_old_space_size=4096
+
+RUN npm install -g nodemon@2.0.20
 RUN npm install -g minify@7.0.2
+RUN npm install -g express@4.18.1
+RUN npm install -g mysql@2.18.1
+RUN npm install -g cors@2.8.5
+RUN npm install -g aws-sdk@2.1218.0
+RUN npm install -g --unsafe-perm sharp@0.31.0
+RUN npm install -g socket.io@2.3.0
+RUN npm install -g uuid@9.0.0
+RUN npm install -g file-type@16.4.0
+RUN npm install -g mime-types@2.1.30
+
+ENV HAXE_DOCKER_CONTAINER=1
 
 WORKDIR /crapp-kit
 

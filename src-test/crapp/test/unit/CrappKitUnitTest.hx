@@ -1,9 +1,9 @@
-package crapp.test;
+package crapp.test.unit;
 
-import crapp.test.token.TestTokenSignedPayload;
-import crapp.test.token.TestTokenBearerLoader;
+import crapp.test.unit.token.TestTokenSignedPayload;
+import crapp.test.unit.token.TestTokenBearerLoader;
 
-class CrappUnitTest {
+class CrappKitUnitTest {
 
     static public function main() {
 

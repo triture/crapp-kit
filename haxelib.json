@@ -1,6 +1,6 @@
 {
   "name": "crapp-kit",
-  "url": "",
+  "url": "https://github.com/triture/crapp-kit.git",
   "license": "MIT",
   "classPath": "src-crapp-kit/",
   "tags": [ "util"],

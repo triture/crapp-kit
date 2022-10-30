@@ -1,4 +1,4 @@
-package crapp.test.token;
+package crapp.test.unit.token;
 
 import crapp.token.CrappTokenSignedPayload;
 import haxe.io.Bytes;

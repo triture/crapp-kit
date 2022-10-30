@@ -7,11 +7,26 @@ services:
             context: ./haxe/
             dockerfile: dockerfile
         environment: 
-            RUN_BASH_SCRIPT: "/haxe/start.sh"
             KEEP_CONTAINER_ALIVE: "yes"
         volumes:
-            - ./haxelib:/haxelib
-            - ../repo:/repo
             - ./shared:/docker-shared
             - ./haxe/scripts:/haxe
             - ../:/crapp-kit
+        networks:
+            - crapp-kit-network
+
+    mysql:
+        restart: always
+        build:
+            context: ./mysql/
+            dockerfile: dockerfile
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+            MYSQL_ROOT_PASSWORD: ""
+        ports:
+            - "3988:3306"
+        networks:
+            - crapp-kit-network
+
+networks:
+    crapp-kit-network:
