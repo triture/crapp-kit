@@ -329,6 +329,7 @@ class TestDatabaseController extends TestIntegrationBase {
 
     function test_transaction_is_commited_after_close_a_ticket(async:Async):Void {
         // ARRANGE
+        var doRollback:Bool = false;
         var resultLength:Int;
         var expectedLength:Int = 1;
         var valueName:String = 'item name';
@@ -364,7 +365,58 @@ class TestDatabaseController extends TestIntegrationBase {
                             assert();
                         }, fail);
 
-                    });
+                    }, doRollback);
+
+                }, fail);
+            });
+        });
+
+        // ASSERT
+        assert = function():Void {
+            Assert.equals(expectedLength, resultLength);
+            async.done();
+        }
+    }
+
+    function test_transaction_should_rollback_on_close_ticket_if_parameter_is_set(async:Async):Void {
+        // ARRANGE
+        var doRollback:Bool = true;
+        var resultLength:Int;
+        var expectedLength:Int = 0;
+        var valueName:String = 'item name';
+        var valueUnique:String = StringKit.generateRandomHex(30);
+        var queryInsert:CrappDatabaseRequestData = {
+            query : 'INSERT INTO tests.my_table (unq, name) VALUES (:unq, :name)',
+            data : {
+                unq : valueUnique,
+                name : valueName
+            }
+        }
+        var querySelect:CrappDatabaseRequestData = {
+            query : 'SELECT * FROM tests.my_table WHERE unq = :unq',
+            data : {
+                unq : valueUnique
+            }
+        }
+        var assert:()->Void;
+        var fail:(err:DatabaseError)->Void = function(err:DatabaseError):Void {
+            Assert.fail(err.message);
+            async.done();
+        }
+
+        // ACT
+        this.pool.getTicket(function(ticket_a:String):Void {
+            this.pool.getTicket(function(ticket_b:String):Void {
+                this.pool.query(ticket_a, queryInsert, function(result:DatabaseSuccess<Dynamic>):Void {
+
+                    this.pool.closeTicket(ticket_a, function():Void {
+
+                        this.pool.query(ticket_b, querySelect, function(result:DatabaseSuccess<Dynamic>):Void {
+                            resultLength = result.length;
+                            assert();
+                        }, fail);
+
+                    }, doRollback);
 
                 }, fail);
             });

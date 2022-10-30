@@ -50,8 +50,8 @@ class DatabasePool {
         this.pool.end();
     }
 
-    public function closeTicket(ticket:String, ?callback:()->Void):Void {
-        this.killTicket(ticket, false, callback);
+    public function closeTicket(ticket:String, ?callback:()->Void, ?rollback:Bool):Void {
+        this.killTicket(ticket, false, callback, rollback);
     }
 
     public function getTicket(callback:(ticket:String)->Void, ticketExpirationTime:Int = 60000):Void {
@@ -104,7 +104,7 @@ class DatabasePool {
 
     }
 
-    private function killTicket(ticket:String, destroyConnection:Bool, ?callback:()->Void):Void {
+    private function killTicket(ticket:String, destroyConnection:Bool, ?callback:()->Void, ?rollback:Bool):Void {
         if (this.map.exists(ticket)) {
             var poolConn:DatabasePoolConnection = this.map.get(ticket);
             poolConn.timer.stop();
@@ -113,7 +113,7 @@ class DatabasePool {
                 poolConn.conn.destroy();
                 if (callback != null) haxe.Timer.delay(callback, 0);
             } else {
-                poolConn.conn.queryResult('COMMIT', function(err:MysqlError, result:MysqlResultSet<Dynamic>):Void {
+                poolConn.conn.queryResult(rollback ? 'ROLLBACK' : 'COMMIT', function(err:MysqlError, result:MysqlResultSet<Dynamic>):Void {
                     poolConn.conn.release();
                     if (callback != null) callback();
                 });
