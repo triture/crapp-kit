@@ -80,19 +80,22 @@ class DatabasePool {
                 if (connError == null) {
                     if (ticketTimedOut) conn.release();
                     else {
-                        conn.queryResult('START TRANSACTION', function(err:MysqlError, result:MysqlResultSet<Dynamic>):Void {
-                            if (err == null) {
-                                var poolConn:DatabasePoolConnection = {
-                                    conn : conn,
-                                    timer : haxe.Timer.delay(this.killTicket.bind(ticket, true), ticketExpirationTime)
-                                }
 
-                                this.map.set(ticket, poolConn);
-                                callback(ticket);
-                            } else {
-                                conn.release();
-                                callback(ticket);
-                            }
+                        this.runSimpleQuery(conn, 'SET SESSION group_concat_max_len = 1000000', function(err_a:Bool):Void {
+                            this.runSimpleQuery(conn, 'START TRANSACTION', function(err_b:Bool):Void {
+                                if (err_a || err_b) {
+                                    conn.release();
+                                    callback(ticket);
+                                } else {
+                                    var poolConn:DatabasePoolConnection = {
+                                        conn : conn,
+                                        timer : haxe.Timer.delay(this.killTicket.bind(ticket, true), ticketExpirationTime)
+                                    }
+
+                                    this.map.set(ticket, poolConn);
+                                    callback(ticket);
+                                }
+                            });
                         });
                     }
 
@@ -102,6 +105,13 @@ class DatabasePool {
             }
         );
 
+    }
+
+    private function runSimpleQuery(conn:MysqlConnection, query:String, cb:(err:Bool)->Void) {
+        conn.queryResult(query, function(err:MysqlError, result:MysqlResultSet<Dynamic>):Void {
+            if (err != null) cb(true);
+            else cb(false);
+        });
     }
 
     private function killTicket(ticket:String, destroyConnection:Bool, ?callback:()->Void, ?rollback:Bool):Void {
