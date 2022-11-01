@@ -1,5 +1,7 @@
-package crapp.test.integration.controller.database;
+package crapp.test.integration.databasepool;
 
+import crapp.model.CrappModel.CrappModelDatabase;
+import utest.Test;
 import helper.kits.StringKit;
 import crapp.db.DatabasePool;
 import crapp.db.DatabaseError;
@@ -7,9 +9,31 @@ import crapp.model.CrappDatabaseRequestData;
 import crapp.db.DatabaseSuccess;
 import utest.Assert;
 import utest.Async;
-import crapp.test.integration.base.TestIntegrationBase;
 
-class TestDatabaseController extends TestIntegrationBase {
+class TestDatabasePool extends Test {
+
+    private var databaseModel:CrappModelDatabase;
+    private var pool:DatabasePool;
+    private var testTable:String;
+
+    function setup() {
+        this.testTable = 'test_${StringKit.generateRandomHex(6)}';
+
+        this.databaseModel = {
+            host : 'mysql',
+            user : 'root',
+            password : '',
+            port : 3306,
+            max_connections : 3,
+            acquire_timeout : 150
+        }
+
+        this.pool = new DatabasePool(this.databaseModel);
+    }
+
+    function teardown() {
+        this.pool.close();
+    }
 
     function test_get_an_ticket_and_check_if_its_open(async:Async) {
         // ARRANGE

@@ -1,8 +1,5 @@
 package crapp.service.modules.logs;
 
-import haxe.Timer;
-import helper.chain.Chain;
-import crapp.model.CrappDatabaseResult;
 import crapp.model.modules.logs.CrappLogData;
 
 class ServiceCrappLogAccessAdd extends CrappService<Bool> {

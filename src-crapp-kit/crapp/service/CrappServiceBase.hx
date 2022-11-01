@@ -1,18 +1,16 @@
 package crapp.service;
 
-import haxe.macro.Type.Ref;
+import crapp.model.CrappServiceErrorData;
 import crapp.model.CrappRouteVerb;
 import node.express.Response;
 import node.express.Request;
-import node.helper.HttpRequest;
 import crapp.model.modules.logs.CrappLogData;
 import crapp.model.modules.logs.CrappLogSituation;
 import helper.kits.StringKit;
 import crapp.model.CrappServiceResultData;
-import crapp.error.CrappErrorHandler;
 
 @:allow(crapp.controller.RouteController)
-class CrappServiceBase extends CrappErrorHandler {
+class CrappServiceBase {
 
     private var originalVerb:CrappRouteVerb;
     private var originalRoute:String;
@@ -136,6 +134,17 @@ class CrappServiceBase extends CrappErrorHandler {
         }
 
         return result;
+    }
+
+    private function runCallbackWithCatch(callback:()->Void, onError:(error:CrappServiceErrorData)->Void):Void {
+        try {
+            callback();
+        } catch (e:CrappServiceError) {
+            onError(e.getErrorModel());
+        } catch (e:Dynamic) {
+            var ce:CrappServiceError = CrappServiceError.SERVER_ERROR(Std.string(e));
+            onError(ce.getErrorModel());
+        }
     }
 
 }
