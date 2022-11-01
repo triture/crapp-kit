@@ -50,7 +50,7 @@ class DatabaseController {
                         conn,
                         this.connectionInitializer,
                         function():Void {
-                            callback(new CrappDatabase(conn, this.model.connection_timeout));
+                            callback(new CrappDatabase(conn));
                         }
                     );
                 }

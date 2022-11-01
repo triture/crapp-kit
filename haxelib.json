@@ -10,8 +10,7 @@
   "contributors": [ "magmalab" ],
   "dependencies": {
     "anonstruct" : "",
-    "util-kit" : "",
-    "hxnodejs" : "",
+    "utilkit" : "",
     "datetime" : ""
   }
 }

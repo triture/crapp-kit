@@ -32,7 +32,6 @@ class CrappServiceBase {
         this.paramsDataParsed = false;
         this.autoLog = true;
         this.runtime = this.getCurrentTimeStamp();
-        super();
     }
 
     inline private function getCurrentTimeStamp():Int return Math.floor(haxe.Timer.stamp() * 1000);

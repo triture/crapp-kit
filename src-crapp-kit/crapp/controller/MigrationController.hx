@@ -1,5 +1,6 @@
 package crapp.controller;
 
+import helper.kits.StringKit;
 import crapp.res.migration.MigrationResource;
 import crapp.res.migration.MigrationConnector;
 import anonstruct.AnonStructError;
@@ -97,6 +98,8 @@ class MigrationController {
 
     private function existMigrationData():Bool {
         this.print('Check if migration exists...');
+
+        if (StringKit.isEmpty(Crapp.S.model.migration_path)) return false;
 
         var path:String = this.getMigrationDriverPath();
 
