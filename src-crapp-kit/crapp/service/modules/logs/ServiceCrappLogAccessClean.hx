@@ -1,20 +1,20 @@
 package crapp.service.modules.logs;
 
-import crapp.model.CrappDatabaseResult;
+import crapp.db.DatabaseSuccess;
 
 class ServiceCrappLogAccessClean extends CrappServiceDatabase<Bool> {
 
     override public function run():Void {
-        this.database.make(
-            this.getDatabaseString(),
-            null,
+        this.query(
+            {
+                query : this.getDatabaseString()
+            },
             this.onResult
         );
     }
 
-    private function onResult(result:CrappDatabaseResult<Dynamic>):Void {
-        if (result.hasError) this.resultError(CrappServiceError.SERVER_ERROR(result.errorMessage).getErrorModel());
-        else this.resultSuccess(true);
+    private function onResult(result:DatabaseSuccess<Dynamic>):Void {
+        this.resultSuccess(true);
     }
 
     private function getDatabaseString():String {

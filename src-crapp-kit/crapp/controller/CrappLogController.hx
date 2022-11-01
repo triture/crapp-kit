@@ -1,14 +1,15 @@
 package crapp.controller;
 
-import helper.kits.FileKit;
 import haxe.io.Bytes;
-import helper.kits.DateKit;
 import haxe.Timer;
-import crapp.controller.DatabaseController.CrappDatabase;
+import crapp.db.DatabaseError;
+import crapp.db.DatabaseSuccess;
 import crapp.model.CrappDatabaseRequestData;
 import crapp.model.CrappDatabaseResult;
-import helper.chain.Chain;
 import crapp.model.modules.logs.CrappLogData;
+import helper.kits.FileKit;
+import helper.kits.DateKit;
+import helper.chain.Chain;
 
 class CrappLogController {
 
@@ -57,7 +58,7 @@ class CrappLogController {
         if (this.queue.length == 0) return;
 
         var tempQueue:Array<CrappLogData> = this.queue;
-        var database:CrappDatabase = null;
+        var databaseTicket:String;
 
         this.queue = [];
 
@@ -65,59 +66,46 @@ class CrappLogController {
         var chain:Chain = new Chain();
 
         chain.add(function(resolve:ChainResolve, abort:ChainError):Void {
-            Crapp.S.controller.database.getInstance(
-                function(conn:CrappDatabase):Void {
-                    if (conn.hasError) abort(' --- CRAPP LOG ERROR - CANNOT GET DATABASE CONNECTION');
-                    else {
-                        database = conn;
-                        resolve();
-                    }
-                }
-            );
-        });
-
-        chain.add(function(resolve:ChainResolve, abort:ChainError):Void {
-            database.startTransaction(resolve, abort.bind(' --- CRAPP LOG ERROR - START TRANSACTION ERROR'));
+            Crapp.S.controller.pool.getTicket(function(ticket:String):Void {
+                databaseTicket = ticket;
+                resolve();
+            }, 10000);
         });
 
         for (item in tempQueue) {
             chain.add(function(resolve:ChainResolve, abort:ChainError):Void {
-                database.makeQuery(
+                Crapp.S.controller.pool.query(
+                    databaseTicket,
                     this.getDatabaseString(item),
-                    function(result:CrappDatabaseResult<Dynamic>):Void {
-                        if (result.hasError) abort(' --- CRAPP LOG ERROR - ' + result.errorMessage);
-                        else resolve();
-                    }
+                    function(data:DatabaseSuccess<Dynamic>):Void resolve(),
+                    function(err:DatabaseError):Void abort(' --- CRAPP LOG ERROR - ' + err.message)
                 );
             });
         }
 
-        chain.add(function(resolve:ChainResolve, abort:ChainError):Void {
-            database.commitTransaction(resolve, abort.bind(' --- CRAPP LOG ERROR - COMMIT TRANSACTION ERROR'));
-        });
-
         chain.runSerie(
             function():Void {
-                if (database != null) database.kill();
-                Sys.println(' --- CRAPP LOG - PERSISTENCE FOR ${tempQueue.length} ITEMS AT ${DateKit.getDateTimeMysqlFormat(Date.now(), true)}');
-                this.saveDiskCache(this.queue);
+                Crapp.S.controller.pool.closeTicket(
+                    databaseTicket,
+                    function():Void {
+                        Sys.println(' --- CRAPP LOG - PERSISTENCE FOR ${tempQueue.length} ITEMS AT ${DateKit.getDateTimeMysqlFormat(Date.now(), true)}');
+                        this.saveDiskCache(this.queue);
+                    }
+                );
             },
             function(error:String):Void {
                 Sys.println(error);
 
-                if (database != null)
-                    database.rollbackTransaction(
-                        function():Void {
-                            Sys.println(' --- CRAPP LOG - ROLLBACK OK');
-                            for (item in this.queue) tempQueue.push(item);
-                            this.queue = tempQueue;
-                            database.kill();
-                        },
-                        function():Void {
-                            Sys.println(' --- CRAPP LOG - ROLLBACK ERROR --- ');
-                            database.kill();
-                        }
-                    );
+                Crapp.S.controller.pool.closeTicket(
+                    databaseTicket,
+                    function():Void {
+                        Sys.println(' --- CRAPP LOG - ROLLBACK OK');
+                        for (item in this.queue) tempQueue.push(item);
+                        this.queue = tempQueue;
+                    },
+                    true
+                );
+
             }
         );
     }

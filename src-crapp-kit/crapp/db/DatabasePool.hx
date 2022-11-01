@@ -172,6 +172,8 @@ class DatabasePool {
 
                     if (err == null) {
                         var resultSuccess:DatabaseSuccess<T> = {
+                            hasCreatedSomething : (result.insertId != null && result.insertId > 0),
+                            createdId : result.insertId,
                             raw : result,
                             length : result.length
                         }

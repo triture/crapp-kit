@@ -1,53 +1,52 @@
 package crapp.service;
 
 import haxe.Timer;
-import helper.kits.TimerKit;
+import node.express.Response;
+import node.express.Request;
+import crapp.db.DatabaseSuccess;
+import crapp.db.DatabaseError;
 import crapp.model.CrappDatabaseResult;
 import crapp.model.CrappDatabaseRequestData;
 import crapp.controller.DatabaseController.CrappDatabase;
-import node.express.Response;
-import node.express.Request;
 
 class CrappServiceDatabase<T> extends CrappService<T> {
 
-    private var database:CrappDatabase;
-    private var autoKillDatabase:Bool;
-    private var lazyDatabase:Bool;
+    private var ticket:String;
 
     public function new() {
         super();
-        this.lazyDatabase = false;
-        this.autoKillDatabase = true;
     }
 
     override private function startup():Void {
-        if (!this.lazyDatabase) this.loadDatabaseInstance(this.run);
-        else this.runServiceCallback(this.run);
+        this.loadDatabaseTicket(this.run);
     }
 
-    private function loadDatabaseInstance(onLoad:()->Void):Void Crapp.S.controller.database.getInstance(this.onLoadDatabaseInstance.bind(onLoad));
-    private function onLoadDatabaseInstance(onLoad:()->Void, conn:CrappDatabase):Void {
-        this.database = conn;
+    private function loadDatabaseTicket(onLoad:()->Void):Void {
+        Crapp.S.controller.pool.getTicket(function(ticket:String):Void {
 
-        if (conn.hasError) this.resultError(CrappServiceError.SERVER_ERROR('Database connection error').getErrorModel());
-        else {
-            Timer.delay(
-                function():Void {
-                    if (this.database.isActive) Crapp.S.controller.print(1, 'DATABASE IS ALIVE FOR TOO MUCH TIME - ${this.originalVerb} ${this.hostname} ${this.originalRoute}');
-                },
-                5000
-            );
+            this.ticket = ticket;
             this.runServiceCallback(onLoad);
-        }
+
+        }, 15000);
+    }
+
+    public function query<Q>(query:CrappDatabaseRequestData, onComplete:(success:DatabaseSuccess<Q>)->Void, ?onError:(err:DatabaseError)->Void):Void {
+        Crapp.S.controller.pool.query(
+            this.ticket,
+            query,
+            onComplete,
+            function(err:DatabaseError):Void {
+                if (onError == null) this.resultError(CrappServiceError.SERVER_ERROR(err.message).getErrorModel());
+                else onError(err);
+            }
+        );
     }
 
     public function queryRun(query:CrappDatabaseRequestData, onComplete:()->Void):Void {
-        if (this.database == null) this.resultError(CrappServiceError.SERVER_ERROR('Database is not loaded').getErrorModel());
-        else this.database.makeQuery(
+        this.query(
             query,
-            function(result:CrappDatabaseResult<Dynamic>):Void {
-                if (result.hasError) this.resultError(CrappServiceError.SERVER_ERROR(result.errorMessage).getErrorModel());
-                else onComplete();
+            function(success:DatabaseSuccess<Dynamic>):Void {
+                onComplete();
             }
         );
     }
@@ -55,13 +54,17 @@ class CrappServiceDatabase<T> extends CrappService<T> {
     public function querySelectOne<Q>(query:CrappDatabaseRequestData, onRead:(data:Q)->Void):Void this.querySelect(query, true, function(data:Array<Q>):Void onRead(data[0]));
 
     public function querySelect<Q>(query:CrappDatabaseRequestData, protectFrom404:Bool, onRead:(data:Array<Q>)->Void):Void {
-        if (this.database == null) this.resultError(CrappServiceError.SERVER_ERROR('Database is not loaded').getErrorModel());
-        else this.database.makeQuery(
+        this.query(
             query,
-            function(result:CrappDatabaseResult<Q>):Void {
-                if (result.hasError) this.resultError(CrappServiceError.SERVER_ERROR(result.errorMessage).getErrorModel());
-                else if (protectFrom404 && result.length == 0) this.resultError(CrappServiceError.NOT_FOUND('unable to find data > ${haxe.Json.stringify(query.data)}').getErrorModel());
-                else onRead([for (item in result.result) item]);
+            function(success:DatabaseSuccess<Q>):Void {
+                if (protectFrom404 && success.length == 0) {
+                    this.resultError(CrappServiceError.NOT_FOUND('unable to find data > ${haxe.Json.stringify(query.data)}').getErrorModel());
+                } else {
+                    var result:Array<Q> = [];
+                    for (item in success.raw) result.push(item);
+
+                    onRead(result);
+                }
             }
         );
     }
@@ -69,33 +72,24 @@ class CrappServiceDatabase<T> extends CrappService<T> {
     override private function runBeforeSuccessExit():Void {
         super.runBeforeSuccessExit();
 
-        if (this.database == null) return;
-
-        this.database.commitTransaction(
-            this.autoCloseDatabaseConnection,
-            function():Void {
-                // error
-                this.database.rollbackTransaction(
-                    this.autoCloseDatabaseConnection,
-                    this.autoCloseDatabaseConnection
-                );
-            }
-        );
+        if (this.ticket != null) {
+            Crapp.S.controller.pool.closeTicket(
+                this.ticket,
+                function():Void {}
+            );
+        }
     }
 
     override private function runBeforeErrorExit():Void {
         super.runBeforeErrorExit();
 
-        if (this.database == null) return;
-
-        this.database.rollbackTransaction(
-            this.autoCloseDatabaseConnection,
-            this.autoCloseDatabaseConnection
-        );
+        if (this.ticket != null) {
+            Crapp.S.controller.pool.closeTicket(
+                this.ticket,
+                function():Void {},
+                true
+            );
+        }
     }
-
-    private function autoCloseDatabaseConnection():Void if (this.autoKillDatabase) this.closeDatabaseConnection();
-    private function closeDatabaseConnection():Void if (this.database != null) this.database.kill();
-
 
 }
