@@ -1,5 +1,7 @@
 package crapp.db;
 
+import haxe.crypto.Sha256;
+import helper.cache.InMemoryCache;
 import haxe.Timer;
 import node.mysql.Mysql;
 import node.mysql.Mysql.MysqlConnectionPoolOptions;
@@ -18,16 +20,17 @@ class DatabasePool {
     static public var ERROR_INVALID_TICKET:String = 'ER_CRAPP_INVALID_TICKET';
     static public var ERROR_CONNECTION_TIMEOUT:String = 'ER_CRAPP_CONNECTION_TIMEOUT';
 
-
     private var pool:MysqlConnectionPool;
 
     private var map:StringMap<DatabasePoolConnection>;
     private var model:CrappModelDatabase;
+    private var cache:StringMap<DatabasePoolCache>;
 
     public function new(model:CrappModelDatabase) {
         this.model = model;
 
         this.map = new StringMap<DatabasePoolConnection>();
+        this.cache = new StringMap<DatabasePoolCache>();
     }
 
     private function createPool():Void {
@@ -147,6 +150,14 @@ class DatabasePool {
             var conn:MysqlConnection = this.map.get(ticket).conn;
             var sanitizedQuery:String = QueryMaker.make(request.query, request.data, conn.escape);
 
+            if (request.cache) {
+                var cache:DatabaseSuccess<T> = this.restoreCache(sanitizedQuery);
+                if (cache != null){
+                    haxe.Timer.delay(onSuccess.bind(cache), 0);
+                    return;
+                }
+            }
+
             var connectionKilled:Bool = false;
             var queryFinished:Bool = false;
             var checkConnectionKilled:()->Void;
@@ -178,6 +189,9 @@ class DatabasePool {
                             length : result.length
                         }
 
+                        if (request.cache && !resultSuccess.hasCreatedSomething)
+                            this.keepCache(sanitizedQuery, resultSuccess, request.cache_timeout);
+
                         onSuccess(resultSuccess);
                     } else {
                         if (onError != null) onError(
@@ -191,6 +205,46 @@ class DatabasePool {
             );
         }
 
+    }
+
+    private function keepCache(sql:String, success:DatabaseSuccess<Any>, ?cacheTimeout:Int):Void {
+        if (cacheTimeout == null) cacheTimeout = 500;
+
+        var cacheData:DatabasePoolCache;
+        var hash:String = Sha256.encode(sql);
+
+        this.killCache(hash);
+
+        var cacheData:DatabasePoolCache = {
+            sql : sql,
+            result : success,
+            timer : haxe.Timer.delay(this.killCache.bind(hash), cacheTimeout)
+        }
+
+        this.cache.set(hash, cacheData);
+    }
+
+    private function restoreCache<T>(sql:String):DatabaseSuccess<T> {
+        var hash:String = Sha256.encode(sql);
+
+        if (this.cache.exists(hash)) {
+            var cacheData:DatabasePoolCache = this.cache.get(hash);
+
+            if (cacheData.sql == sql) {
+                cacheData.result.raw = cacheData.result.raw.clone();
+
+                return cast cacheData.result;
+            }
+        }
+
+        return null;
+    }
+
+    private function killCache(hash:String):Void {
+        if (this.cache.exists(hash)) {
+            this.cache.get(hash).timer.stop();
+            this.cache.remove(hash);
+        }
     }
 
     inline private function generateError(ticket:String, sql:String, code:String, altMessage:String, message:String):DatabaseError {
@@ -210,5 +264,11 @@ class DatabasePool {
 
 private typedef DatabasePoolConnection = {
     var conn:MysqlConnection;
+    var timer:haxe.Timer;
+}
+
+private typedef DatabasePoolCache = {
+    var sql:String;
+    var result:DatabaseSuccess<Any>;
     var timer:haxe.Timer;
 }

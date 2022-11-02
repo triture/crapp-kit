@@ -7,6 +7,7 @@ typedef CrappDatabaseRequestData = {
 
     @:optional var data:Dynamic;
     @:optional var cache:Bool;
+    @:optional var cache_timeout:Int;
     @:optional var debug:Bool;
     @:optional var retry_on_deadlock:Int;
     @:optional var error:String;
@@ -27,6 +28,10 @@ class CrappDatabaseRequestDataValidator extends AnonStruct {
         this.propertyBool('cache')
             .allowNull();
 
+        this.propertyInt('cache_timeout')
+            .refuseNull()
+            .greaterOrEqualThan(0);
+
         this.propertyBool('debug')
             .allowNull();
 
@@ -38,6 +43,10 @@ class CrappDatabaseRequestDataValidator extends AnonStruct {
         this.propertyString('error')
             .refuseEmpty()
             .allowNull();
+
+        this.propertyInt('timeout')
+            .allowNull()
+            .greaterOrEqualThan(0);
 
     }
 }

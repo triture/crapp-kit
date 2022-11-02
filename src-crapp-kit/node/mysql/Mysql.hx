@@ -161,6 +161,8 @@ class MysqlResultSet<T> implements ResultSet {
 
     }
 
+    public function clone():MysqlResultSet<T> return new MysqlResultSet<T>(this.__r, this.__f);
+
     public var insertId(get, null):Int;
     public var insertIds(get, null):Array<Int>;
     public var affectedRows(get, null):Int;
@@ -190,7 +192,6 @@ class MysqlResultSet<T> implements ResultSet {
         if (this.length == null || this.length == 0) return false;
         else return this.__currentPosition < (this.length - 1) ;
     }
-
 
     public function next():T {
         this.__currentPosition++;

@@ -452,4 +452,48 @@ class TestDatabasePool extends Test {
             async.done();
         }
     }
+
+    function test_the_same_query_with_active_cache_should_use_cache_data(async:Async):Void {
+        // ARRANGE
+        var resultErrorCode:String;
+        var expectedErrorCode:String = 'PROTOCOL_SEQUENCE_TIMEOUT';
+        var ticketTimeOut:Int = 5;
+        var query:CrappDatabaseRequestData = {
+            query : [for (i in 0 ... 1200) '(SELECT ${i} as `val`)'].join(' UNION ALL '),
+            cache : true,
+            cache_timeout : 50,
+            timeout : 500
+        }
+        var assert:()->Void;
+
+        // ACT
+        this.pool.getTicket(function(ticket:String):Void {
+            this.pool.query(ticket, query, function(success:DatabaseSuccess<Dynamic>):Void {
+
+                query.timeout = 3; // forçar menor tempo de espera
+
+                this.pool.query(ticket, query, function(success:DatabaseSuccess<Dynamic>):Void {
+
+                    query.timeout = 5; // forca um tempo menor de execucao
+
+                    haxe.Timer.delay( // espera o cache espirar
+                        function():Void {
+                            this.pool.query(ticket, query, function(sucess:DatabaseSuccess<Dynamic>):Void {
+                                //
+                            }, function(err:DatabaseError):Void {
+                                resultErrorCode = err.code;
+                                assert();
+                            });
+                        }, 60
+                    );
+                });
+            });
+        });
+
+        // ASSERT
+        assert = function():Void {
+            Assert.equals(expectedErrorCode, resultErrorCode);
+            async.done();
+        }
+    }
 }
