@@ -1,13 +1,8 @@
 package crapp.service;
 
-import haxe.Timer;
-import node.express.Response;
-import node.express.Request;
 import crapp.db.DatabaseSuccess;
 import crapp.db.DatabaseError;
-import crapp.model.CrappDatabaseResult;
 import crapp.model.CrappDatabaseRequestData;
-import crapp.controller.DatabaseController.CrappDatabase;
 
 class CrappServiceDatabase<T> extends CrappService<T> {
 
