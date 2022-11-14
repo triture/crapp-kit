@@ -496,4 +496,49 @@ class TestDatabasePool extends Test {
             async.done();
         }
     }
+
+    function test_connection_can_disable_transaction_mode(async:Async):Void {
+        // ARRANGE
+        var resultLength:Int;
+        var expectedLength:Int = 1;
+        var autoTransaction:Bool = false;
+        var valueName:String = 'item name';
+        var valueUnique:String = StringKit.generateRandomHex(30);
+        var queryInsert:CrappDatabaseRequestData = {
+            query : 'INSERT INTO tests.my_table (unq, name) VALUES (:unq, :name)',
+            data : {
+                unq : valueUnique,
+                name : valueName
+            }
+        }
+        var querySelect:CrappDatabaseRequestData = {
+            query : 'SELECT * FROM tests.my_table WHERE unq = :unq',
+            data : {
+                unq : valueUnique
+            }
+        }
+        var assert:()->Void;
+        var fail:(err:DatabaseError)->Void = function(err:DatabaseError):Void {
+            Assert.fail(err.message);
+            async.done();
+        }
+
+        // ACT
+        this.pool.getTicket(function(ticket_a:String):Void {
+            this.pool.getTicket(function(ticket_b:String):Void {
+                this.pool.query(ticket_a, queryInsert, function(result:DatabaseSuccess<Dynamic>):Void {
+                    this.pool.query(ticket_b, querySelect, function(result:DatabaseSuccess<Dynamic>):Void {
+                        resultLength = result.length;
+                        assert();
+                    }, fail);
+                }, fail);
+            }, autoTransaction);
+        }, autoTransaction);
+
+        // ASSERT
+        assert = function():Void {
+            Assert.equals(expectedLength, resultLength);
+            async.done();
+        }
+    }
 }

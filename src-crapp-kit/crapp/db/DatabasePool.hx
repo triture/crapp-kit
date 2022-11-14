@@ -57,7 +57,7 @@ class DatabasePool {
         this.killTicket(ticket, false, callback, rollback);
     }
 
-    public function getTicket(callback:(ticket:String)->Void, ticketExpirationTime:Int = 60000):Void {
+    public function getTicket(callback:(ticket:String)->Void, ticketExpirationTime:Int = 60000, autoTransaction:Bool = true):Void {
         var ticket:String = StringKit.generateRandomHex(32);
         var ticketTimedOut:Bool = false;
         var ticketTimer:Timer;
@@ -84,21 +84,31 @@ class DatabasePool {
                     if (ticketTimedOut) conn.release();
                     else {
 
-                        this.runSimpleQuery(conn, 'SET SESSION group_concat_max_len = 1000000', function(err_a:Bool):Void {
-                            this.runSimpleQuery(conn, 'START TRANSACTION', function(err_b:Bool):Void {
-                                if (err_a || err_b) {
-                                    conn.release();
-                                    callback(ticket);
-                                } else {
-                                    var poolConn:DatabasePoolConnection = {
-                                        conn : conn,
-                                        timer : haxe.Timer.delay(this.killTicket.bind(ticket, true), ticketExpirationTime)
-                                    }
+                        var closeError = function():Void {
+                            conn.release();
+                            callback(ticket);
+                        }
 
-                                    this.map.set(ticket, poolConn);
-                                    callback(ticket);
-                                }
-                            });
+                        var closeSuccess = function():Void {
+                            var poolConn:DatabasePoolConnection = {
+                                conn : conn,
+                                timer : haxe.Timer.delay(this.killTicket.bind(ticket, true), ticketExpirationTime),
+                                autoTransaction : autoTransaction
+                            }
+
+                            this.map.set(ticket, poolConn);
+                            callback(ticket);
+                        }
+
+                        this.runSimpleQuery(conn, 'SET SESSION group_concat_max_len = 1000000', function(err_a:Bool):Void {
+                            if (err_a) closeError();
+                            else {
+                                if (!autoTransaction) closeSuccess();
+                                else this.runSimpleQuery(conn, 'START TRANSACTION', function(err_b:Bool):Void {
+                                    if (err_b) closeError();
+                                    else closeSuccess();
+                                });
+                            }
                         });
                     }
 
@@ -107,7 +117,6 @@ class DatabasePool {
                 }
             }
         );
-
     }
 
     private function runSimpleQuery(conn:MysqlConnection, query:String, cb:(err:Bool)->Void) {
@@ -126,10 +135,15 @@ class DatabasePool {
                 poolConn.conn.destroy();
                 if (callback != null) haxe.Timer.delay(callback, 0);
             } else {
-                poolConn.conn.queryResult(rollback ? 'ROLLBACK' : 'COMMIT', function(err:MysqlError, result:MysqlResultSet<Dynamic>):Void {
+                if (poolConn.autoTransaction) {
+                    poolConn.conn.queryResult(rollback ? 'ROLLBACK' : 'COMMIT', function(err:MysqlError, result:MysqlResultSet<Dynamic>):Void {
+                        poolConn.conn.release();
+                        if (callback != null) callback();
+                    });
+                } else {
                     poolConn.conn.release();
-                    if (callback != null) callback();
-                });
+                    if (callback != null) haxe.Timer.delay(callback, 0);
+                }
             }
 
             this.map.remove(ticket);
@@ -265,6 +279,7 @@ class DatabasePool {
 private typedef DatabasePoolConnection = {
     var conn:MysqlConnection;
     var timer:haxe.Timer;
+    var autoTransaction:Bool;
 }
 
 private typedef DatabasePoolCache = {
