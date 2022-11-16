@@ -278,10 +278,9 @@ class TestDatabasePool extends Test {
         // ARRANGE
         var ticketTimeOut:Int = 5;
         var resultErrorCode:String;
-        var expectedErrorCode:String = 'PROTOCOL_SEQUENCE_TIMEOUT';
+        var expectedErrorCode:String = 'ER_CRAPP_CONNECTION_TIMEOUT';
         var query:CrappDatabaseRequestData = {
-            query : [for (i in 0 ... 1200) '(SELECT ${i} as `val`)'].join(' UNION ALL '),
-            timeout : 20
+            query : [for (i in 0 ... 1200) '(SELECT ${i} as `val`)'].join(' UNION ALL ')
         }
         var assert:()->Void;
 

@@ -1,12 +1,11 @@
 FROM haxe:4.2.5-buster
 
-RUN apt-get update \
-	&& apt-get install -y --no-install-recommends apt-utils \
-	&& yes | apt-get install unzip -y \
-	&& yes | apt-get install zip -y
-
-RUN yes | apt-get install -y gcc
-RUN yes | apt-get install -y g++
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends apt-utils
+RUN apt-get install -y unzip
+RUN apt-get install -y zip
+RUN apt-get install -y gcc
+RUN apt-get install -y g++
 
 # SETUP HAXELIB
 

@@ -180,6 +180,7 @@ class DatabasePool {
                 if (!queryFinished) {
                     if (this.isOpen(ticket)) haxe.Timer.delay(checkConnectionKilled, 100);
                     else {
+                        queryFinished = true;
                         connectionKilled = true;
 
                         if (onError != null) onError(
@@ -189,10 +190,12 @@ class DatabasePool {
                 }
             }
 
+            checkConnectionKilled();
+
             conn.queryResult(
                 sanitizedQuery,
                 function(err:MysqlError, result:MysqlResultSet<T>):Void {
-                    if (connectionKilled) return;
+                    if (queryFinished || connectionKilled) return;
                     queryFinished = true;
 
                     if (err == null) {
@@ -214,7 +217,7 @@ class DatabasePool {
                     }
                 },
                 request.timeout == null
-                    ? 50000
+                    ? 20000
                     : request.timeout
             );
         }
