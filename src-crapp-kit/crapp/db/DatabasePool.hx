@@ -1,7 +1,6 @@
 package crapp.db;
 
 import haxe.crypto.Sha256;
-import helper.cache.InMemoryCache;
 import haxe.Timer;
 import node.mysql.Mysql;
 import node.mysql.Mysql.MysqlConnectionPoolOptions;
