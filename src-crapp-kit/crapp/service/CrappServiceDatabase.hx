@@ -6,9 +6,11 @@ import crapp.model.CrappDatabaseRequestData;
 
 class CrappServiceDatabase<T> extends CrappService<T> {
 
+    private var useTransaction:Bool;
     private var ticket:String;
 
-    public function new() {
+    public function new(useTransaction:Bool = true) {
+        this.useTransaction = useTransaction;
         super();
     }
 
@@ -22,7 +24,7 @@ class CrappServiceDatabase<T> extends CrappService<T> {
             this.ticket = ticket;
             this.runServiceCallback(onLoad);
 
-        }, 15000);
+        }, 15000, this.useTransaction);
     }
 
     public function query<Q>(query:CrappDatabaseRequestData, onComplete:(success:DatabaseSuccess<Q>)->Void, ?onError:(err:DatabaseError)->Void):Void {
