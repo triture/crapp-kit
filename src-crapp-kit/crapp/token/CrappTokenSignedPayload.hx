@@ -79,7 +79,7 @@ class CrappTokenSignedPayload extends CrappTokenBase {
 
     public function validate(key:String, currDate:Date):Void {
         if (this.signature.compare(this.generateSignature(key)) != 0) throw "Invalid Signature";
-        else if (this.expiresIn.getTime() >= currDate.getTime()) throw "Expired Token";
+        else if (this.expiresIn.getTime() <= currDate.getTime()) throw "Expired Token";
     }
 
     public function generate(key:String):String {

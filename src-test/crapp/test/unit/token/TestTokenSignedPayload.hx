@@ -63,7 +63,7 @@ class TestTokenSignedPayload extends Test {
         // ARRANGE
         var valueKey:String = "This is my secret key";
         var valueTokenString:String = 'SP AeQHAAEXOzsZAABUaGlzIGlzIHRoZSB0b2tlbiBQYXlsb2FkHU4uQvAgEqzVlR5515_8L7uwGZZ6F57-vhGb4W7txfA';
-        var valueCurrDate:Date = Date.fromString('2020-01-01 00:00:00');
+        var valueCurrDate:Date = Date.fromString('2020-01-02 00:00:00');
 
         var resultErrorMessage:String = '';
         var expectedErrorMessage:String = 'Expired Token';
@@ -85,10 +85,26 @@ class TestTokenSignedPayload extends Test {
         // ARRANGE
         var valueKey:String = "This is my secret key";
         var valueTokenString:String = 'SP AeQHAAEXOzsZAABUaGlzIGlzIHRoZSB0b2tlbiBQYXlsb2FkHU4uQvAgEqzVlR5515_8L7uwGZZ6F57-vhGb4W7txfA';
-        var valueCurrDate:Date = Date.fromString('2020-01-02 00:00:00');
+        var valueCurrDate:Date = Date.fromString('2020-01-01 00:00:00');
 
         var result:Bool;
         var expectedResult:Bool = true;
+
+        // ACT
+        result = CrappTokenSignedPayload.isValid(valueTokenString, valueKey, valueCurrDate);
+
+        // ASSERT
+        Assert.same(expectedResult, result);
+    }
+
+    function test_shortcut_validation_expired_token() {
+        // ARRANGE
+        var valueKey:String = "This is my secret key";
+        var valueTokenString:String = 'SP AeQHAAEXOzsZAABUaGlzIGlzIHRoZSB0b2tlbiBQYXlsb2FkHU4uQvAgEqzVlR5515_8L7uwGZZ6F57-vhGb4W7txfA';
+        var valueCurrDate:Date = Date.fromString('2020-01-02 00:00:00');
+
+        var result:Bool;
+        var expectedResult:Bool = false;
 
         // ACT
         result = CrappTokenSignedPayload.isValid(valueTokenString, valueKey, valueCurrDate);
@@ -101,7 +117,7 @@ class TestTokenSignedPayload extends Test {
         // ARRANGE
         var valueKey:String = "wrong_key";
         var valueTokenString:String = 'SP AeQHAAEXOzsZAABUaGlzIGlzIHRoZSB0b2tlbiBQYXlsb2FkHU4uQvAgEqzVlR5515_8L7uwGZZ6F57-vhGb4W7txfA';
-        var valueCurrDate:Date = Date.fromString('2020-01-02 00:00:00');
+        var valueCurrDate:Date = Date.fromString('2020-01-01 00:00:00');
 
         var result:Bool;
         var expectedResult:Bool = false;
