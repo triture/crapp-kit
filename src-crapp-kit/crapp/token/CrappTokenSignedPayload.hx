@@ -12,16 +12,15 @@ class CrappTokenSignedPayload extends CrappTokenBase {
     // offset  0
     //      SP [version:1b][yyyymmddhhmmss:7b][payload_length:3b][payload:nb][signature:32b]
 
-    private var key:String;
-
     public var version:Int;
     public var payload:Bytes;
     public var expiresIn:Date;
 
-    public function new(key:String) {
+    private var signature:Bytes;
+
+    public function new() {
         super();
 
-        this.key = key;
         this.version = 1;
     }
 
@@ -31,9 +30,11 @@ class CrappTokenSignedPayload extends CrappTokenBase {
     }
 
     public function load(token:String):Void {
-        if (!StringTools.startsWith(token, 'SP ')) throw 'Token is not Signed Payload type';
+        var tokenHead:String = 'SP ';
+
+        if (!StringTools.startsWith(token, tokenHead)) throw 'Token is not Signed Payload type';
         else {
-            var tokenDataBase64:String = token.substr('SP '.length);
+            var tokenDataBase64:String = token.substr(tokenHead.length);
             var b:BytesInput = new BytesInput(Base64.urlDecode(tokenDataBase64));
 
             var version:Int = b.readByte();
@@ -53,13 +54,11 @@ class CrappTokenSignedPayload extends CrappTokenBase {
         var payloadLength:Int = buf.readUInt24();
         this.payload = buf.read(payloadLength);
 
-
-        var signature:Bytes = buf.readAll();
-        if (signature.compare(this.generateSignature()) != 0) throw "Invalid Signature";
+        this.signature = buf.readAll();
     }
 
-    private function generateSignature():Bytes {
-        var keyBytes:Bytes = Sha256.make(Bytes.ofString(this.key));
+    private function generateSignature(key:String):Bytes {
+        var keyBytes:Bytes = Sha256.make(Bytes.ofString(key));
         var k1:Bytes = Sha256.make(keyBytes);
         var k2:Bytes = Sha256.make(k1);
 
@@ -78,7 +77,12 @@ class CrappTokenSignedPayload extends CrappTokenBase {
         return Sha256.make(finalData.getBytes());
     }
 
-    public function generate():String {
+    public function validate(key:String, currDate:Date):Void {
+        if (this.signature.compare(this.generateSignature(key)) != 0) throw "Invalid Signature";
+        else if (this.expiresIn.getTime() >= currDate.getTime()) throw "Expired Token";
+    }
+
+    public function generate(key:String):String {
         var b:BytesOutput = new BytesOutput();
 
         b.writeByte(1); // version 1
@@ -87,8 +91,21 @@ class CrappTokenSignedPayload extends CrappTokenBase {
 
         b.writeUInt24(this.payload.length);
         b.write(this.payload);
-        b.write(this.generateSignature());
+
+        this.signature = this.generateSignature(key);
+        b.write(this.signature);
 
         return 'SP ' + Base64.urlEncode(b.getBytes());
+    }
+
+    static public function isValid(token:String, key:String, currDate:Date):Bool {
+        try {
+            var t:CrappTokenSignedPayload = new CrappTokenSignedPayload();
+            t.load(token);
+            t.validate(key, currDate);
+            return true;
+        } catch (e:Dynamic) {
+            return false;
+        }
     }
 }
