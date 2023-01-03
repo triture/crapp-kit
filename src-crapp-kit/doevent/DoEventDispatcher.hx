@@ -39,7 +39,11 @@ class DoEventDispatcher {
         var callers:Array<(eventCaller:DoEvent<T>)->Void> = cast this.dispatchEventMap.get(event.eventType);
 
         if (callers != null) {
-            for (caller in callers) if (caller != null) caller(event);
+            for (caller in callers) if (caller != null) {
+                var clone = event.clone();
+                clone.action = caller;
+                caller(clone);
+            }
         }
     }
 
