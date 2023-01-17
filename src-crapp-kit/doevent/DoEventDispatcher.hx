@@ -7,7 +7,7 @@ class DoEventDispatcher {
     private var dispatchEventMap:StringMap<Array<(eventCaller:DoEvent<Dynamic>)->Void>>;
 
     public function new() {
-        this.free();
+        this.reset();
     }
 
     public function addListener<T>(eventType:String, listener:(event:DoEvent<T>)->Void):Void {
@@ -47,7 +47,7 @@ class DoEventDispatcher {
         }
     }
 
-    public function free():Void {
+    public function reset():Void {
         this.dispatchEventMap = new StringMap<Array<(eventCaller:DoEvent<Dynamic>)->Void>>();
     }
 
