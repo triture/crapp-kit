@@ -16,7 +16,7 @@ typedef CrappServiceResultData = {
 
 class CrappServiceResultDataValidator extends AnonStruct {
 
-    public function new(?dataValidator:Class<AnonStruct>, isDataArray:Bool = false) {
+    public function new(?dataValidator:Class<AnonStruct>, isDataArray:Bool = false, arrayMin:Int = 0) {
         super();
 
         this.propertyString('endpoint')
@@ -33,6 +33,7 @@ class CrappServiceResultDataValidator extends AnonStruct {
         if (dataValidator != null) {
             if (isDataArray) {
                 this.propertyArray('data')
+                    .minLen(arrayMin)
                     .refuseNull()
                     .setStruct(Type.createInstance(dataValidator, []));
 
