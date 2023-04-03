@@ -1,5 +1,9 @@
 package crapp.test.unit;
 
+import crapp.test.unit.multimap.N2NMapTest;
+import crapp.test.unit.multimap.ArrayMapTest;
+import crapp.test.unit.sessioncounter.SessionCounterTest;
+import crapp.test.unit.cacheback.CacheBackServerTest;
 import crapp.test.unit.crapp.service.reqres.TestCrappParameterType;
 import crapp.test.unit.doevent.DoEventDispatcherTest;
 import crapp.test.unit.token.TestTokenSignedPayload;
@@ -15,7 +19,11 @@ class CrappKitUnitTest {
 
             new DoEventDispatcherTest(),
 
-            new TestCrappParameterType()
+            new TestCrappParameterType(),
+            new CacheBackServerTest(),
+            new SessionCounterTest(),
+            new ArrayMapTest(),
+            new N2NMapTest()
         ]);
 
     }

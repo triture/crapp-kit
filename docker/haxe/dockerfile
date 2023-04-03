@@ -34,10 +34,13 @@ RUN npm install -g mysql@2.18.1
 RUN npm install -g cors@2.8.5
 RUN npm install -g aws-sdk@2.1218.0
 RUN npm install -g --unsafe-perm sharp@0.31.0
-RUN npm install -g socket.io@2.3.0
 RUN npm install -g uuid@9.0.0
 RUN npm install -g file-type@16.4.0
 RUN npm install -g mime-types@2.1.30
+RUN npm install -g memcached@2.2.2
+
+RUN npm install -g socket.io@4.5.3
+RUN npm install -g socket.io-client@4.5.3
 
 ENV HAXE_DOCKER_CONTAINER=1
 
