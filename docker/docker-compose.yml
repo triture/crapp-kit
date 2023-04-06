@@ -6,7 +6,8 @@ services:
         build:
             context: ./haxe/
             dockerfile: dockerfile
-        environment: 
+        environment:
+            RUN_BASH_SCRIPT: "/haxe/start.sh"
             KEEP_CONTAINER_ALIVE: "yes"
         volumes:
             - ./shared:/docker-shared

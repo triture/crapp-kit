@@ -1,5 +1,6 @@
 package crapp.test.unit;
 
+import crapp.test.unit.crapp.token.TestTokenManager;
 import crapp.test.unit.multimap.N2NMapTest;
 import crapp.test.unit.multimap.ArrayMapTest;
 import crapp.test.unit.sessioncounter.SessionCounterTest;
@@ -23,7 +24,9 @@ class CrappKitUnitTest {
             new CacheBackServerTest(),
             new SessionCounterTest(),
             new ArrayMapTest(),
-            new N2NMapTest()
+            new N2NMapTest(),
+
+            new TestTokenManager()
         ]);
 
     }

@@ -13,11 +13,9 @@ RUN yes | haxelib install datetime
 RUN yes | haxelib install PBKDF2
 RUN yes | haxelib install haxe-crypto
 RUN yes | haxelib install utest
-RUN yes | haxelib git util-kit https://github.com/triture/util-kit.git
 RUN yes | haxelib git anonstruct https://github.com/triture/anonstruct.git
 RUN yes | haxelib git apirock https://github.com/triture/apirock.git
 RUN yes | haxelib git hxnodejs https://github.com/HaxeFoundation/hxnodejs.git
-
 
 # INSTALLING NODEJS
 
