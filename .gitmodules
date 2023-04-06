@@ -1,0 +1,3 @@
+[submodule "repo/util-kit"]
+	path = repo/util-kit
+	url = git@github.com:triture/util-kit.git
