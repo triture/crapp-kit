@@ -22,6 +22,21 @@ class CrappTokenManager<PAYLOAD> {
         this.startupToken();
     }
 
+    public function extractPayload(tokenValue:String):PAYLOAD {
+        try {
+            var token:CrappTokenSignedPayload = new CrappTokenSignedPayload();
+            token.load(tokenValue);
+
+            var payload:PAYLOAD = haxe.Json.parse(token.payload.toString());
+            var validator:AnonStruct = Type.createInstance(this.validator, []);
+            validator.validate(payload);
+
+            return payload;
+        } catch (e:Dynamic) {
+            return null;
+        }
+    }
+
     public function validateToken(tokenValue:String, salt:String):Bool {
         try {
             var token:CrappTokenSignedPayload = new CrappTokenSignedPayload();
