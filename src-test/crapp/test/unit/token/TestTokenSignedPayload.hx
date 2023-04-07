@@ -12,15 +12,17 @@ class TestTokenSignedPayload extends Test {
         var valueKey:String = "This is my secret key";
         var valuePayload:String = "This is the token Payload";
         var valueExpirationDate:Date = Date.fromString('2020-01-01 23:59:59');
+        var expectedTokenValue:String = 'SP AgAA5AcAARc7OxkAAFRoaXMgaXMgdGhlIHRva2VuIFBheWxvYWRZBUr6SCDeuo0KGbrbYhTXEkrVMdsdz9S0Uz9xIMrHyw';
 
         // ACT
         var token:CrappTokenSignedPayload = new CrappTokenSignedPayload();
+        token.rounds = 0;
         token.setData(valueExpirationDate, Bytes.ofString(valuePayload));
 
         var tokenString:String = token.generate(valueKey);
 
         // ASSERT
-        Assert.same('SP AeQHAAEXOzsZAABUaGlzIGlzIHRoZSB0b2tlbiBQYXlsb2FkHU4uQvAgEqzVlR5515_8L7uwGZZ6F57-vhGb4W7txfA', tokenString);
+        Assert.same(expectedTokenValue, tokenString);
     }
 
     function test_if_loaded_token_is_correct() {

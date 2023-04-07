@@ -1,5 +1,6 @@
 package crapp.token;
 
+import helper.kits.NumberKit;
 import haxe.io.BytesInput;
 import haxe.io.BytesOutput;
 import haxe.crypto.Base64;
@@ -10,18 +11,19 @@ class CrappTokenSignedPayload extends CrappTokenBase {
 
     // MODEL
     // offset  0
-    //      SP [version:1b][yyyymmddhhmmss:7b][payload_length:3b][payload:nb][signature:32b]
+    //      SP [version:1b][rounds:2b][yyyymmddhhmmss:7b][payload_length:3b][payload:nb][signature:32b]
 
     public var version:Int;
     public var payload:Bytes;
     public var expiresIn:Date;
+    public var rounds:Int;
 
     private var signature:Bytes;
 
     public function new() {
         super();
-
-        this.version = 1;
+        this.rounds = NumberKit.getRandom(6000, true);
+        this.version = 2;
     }
 
     public function setData(expiresIn:Date, payload:Bytes):Void {
@@ -42,6 +44,7 @@ class CrappTokenSignedPayload extends CrappTokenBase {
 
             switch (version) {
                 case 1: this.loadVersion01(b);
+                case 2: this.loadVersion02(b);
                 case _: throw 'Wrong Token Version';
             }
         }
@@ -49,6 +52,18 @@ class CrappTokenSignedPayload extends CrappTokenBase {
 
     private function loadVersion01(buf:BytesInput):Void {
         this.version = buf.readByte();
+        this.rounds = 0;
+        this.expiresIn = this.decodeDateFromBytes(buf);
+
+        var payloadLength:Int = buf.readUInt24();
+        this.payload = buf.read(payloadLength);
+
+        this.signature = buf.readAll();
+    }
+
+    private function loadVersion02(buf:BytesInput):Void {
+        this.version = buf.readByte();
+        this.rounds = buf.readUInt16();
         this.expiresIn = this.decodeDateFromBytes(buf);
 
         var payloadLength:Int = buf.readUInt24();
@@ -74,7 +89,10 @@ class CrappTokenSignedPayload extends CrappTokenBase {
         finalData.write(k1);
         finalData.write(k3);
 
-        return Sha256.make(finalData.getBytes());
+        var finalSha = Sha256.make(finalData.getBytes());
+
+        for (i in 0 ... this.rounds) finalSha = Sha256.make(finalSha);
+        return finalSha;
     }
 
     public function validate(key:String, currDate:Date):Void {
@@ -85,8 +103,8 @@ class CrappTokenSignedPayload extends CrappTokenBase {
     public function generate(key:String):String {
         var b:BytesOutput = new BytesOutput();
 
-        b.writeByte(1); // version 1
-
+        b.writeByte(this.version);
+        b.writeUInt16(this.rounds);
         this.encodeDateInBytes(this.expiresIn, b);
 
         b.writeUInt24(this.payload.length);
