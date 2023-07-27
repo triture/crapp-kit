@@ -40,8 +40,14 @@ class CrappLogController {
 
     private function loadDiskCache():Array<CrappLogData> {
         var data:Bytes = FileKit.secureLoadData('/crapp_temp/${Crapp.S.model.private_key}/log/', 'service_log.log');
-        if (data == null) return [];
-        else return haxe.Json.parse(data.toString());
+        
+        try {
+            if (data != null) return haxe.Json.parse(data.toString());
+        } catch (e:Dynamic) {
+
+        }
+
+        return [];
     }
 
     private function refreshPersistsTimer():Void {
