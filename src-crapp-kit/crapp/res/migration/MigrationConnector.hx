@@ -32,6 +32,7 @@ class MigrationConnector {
                 onConnect();
             } else {
                 this.print('Database Connection Error: ' + onError.toString());
+                haxe.Timer.delay(this.connect.bind(onConnect), 3000);
             }
         });
     }
